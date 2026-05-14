@@ -23,14 +23,15 @@ func NewPaymentHTTPClient(baseURL string) PaymentClient {
 	return &paymentHTTPClient{
 		baseURL: baseURL,
 		client: &http.Client{
-			Timeout: 2 * time.Second,
+			Timeout: 5 * time.Second,
 		},
 	}
 }
 
 type paymentRequest struct {
-	OrderID string `json:"order_id"`
-	Amount  int64  `json:"amount"`
+	OrderID       string `json:"order_id"`
+	Amount        int64  `json:"amount"`
+	CustomerEmail string `json:"customer_email"`
 }
 
 type paymentResponse struct {
@@ -40,8 +41,9 @@ type paymentResponse struct {
 
 func (c *paymentHTTPClient) AuthorizePayment(req *domain.PaymentRequest) (*domain.PaymentResponse, error) {
 	body, err := json.Marshal(paymentRequest{
-		OrderID: req.OrderID,
-		Amount:  req.Amount,
+		OrderID:       req.OrderID,
+		Amount:        req.Amount,
+		CustomerEmail: req.CustomerEmail,
 	})
 	if err != nil {
 		return nil, err
