@@ -1,4 +1,4 @@
-package usecase
+﻿package usecase
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 )
 
 type OrderUsecase interface {
-	CreateOrder(customerID, itemName string, amount int64) (*domain.Order, error)
+	CreateOrder(customerID, customerEmail, itemName string, amount int64) (*domain.Order, error)
 	GetOrder(id string) (*domain.Order, error)
 	CancelOrder(id string) error
 }
@@ -37,12 +37,13 @@ func NewOrderUsecase(
 	}
 }
 
-func (u *orderUsecase) CreateOrder(customerID, itemName string, amount int64) (*domain.Order, error) {
+func (u *orderUsecase) CreateOrder(customerID, customerEmail, itemName string, amount int64) (*domain.Order, error) {
 	if amount <= 0 {
 		return nil, errors.New("amount must be greater than 0")
 	}
 
 	order := &domain.Order{
+		CustomerEmail: customerEmail,
 		ID:         fmt.Sprintf("%d", time.Now().UnixNano()),
 		CustomerID: customerID,
 		ItemName:   itemName,
@@ -56,9 +57,10 @@ func (u *orderUsecase) CreateOrder(customerID, itemName string, amount int64) (*
 	}
 
 	paymentResp, err := u.paymentClient.AuthorizePayment(&domain.PaymentRequest{
-		OrderID: order.ID,
-		Amount:  amount,
-	})
+			OrderID:       order.ID,
+			Amount:        amount,
+			CustomerEmail: customerEmail,
+		})
 
 	if err != nil {
 		u.orderRepo.UpdateStatus(order.ID, "Failed")
@@ -123,3 +125,6 @@ func (u *orderUsecase) CancelOrder(id string) error {
 
 	return nil
 }
+
+
+
