@@ -1,7 +1,8 @@
-FROM golang:1.21-alpine AS builder
+﻿FROM golang:1.21-alpine AS builder
+RUN apk add --no-cache git
 WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
+ENV GONOSUMDB=*
+ENV GOFLAGS=-mod=mod
 COPY . .
 RUN go build -o payment-service ./cmd/payment-service
 

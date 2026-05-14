@@ -1,7 +1,8 @@
-FROM golang:1.21-alpine AS builder
+﻿FROM golang:1.21-alpine AS builder
+RUN apk add --no-cache git
 WORKDIR /app
-COPY go.mod ./
-RUN go mod tidy
+ENV GONOSUMDB=*
+ENV GOFLAGS=-mod=mod
 COPY . .
 RUN go build -o order-service ./cmd/order-service
 
