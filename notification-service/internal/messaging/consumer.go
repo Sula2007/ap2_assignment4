@@ -1,4 +1,4 @@
-package messaging
+﻿package messaging
 
 import (
 	"context"
@@ -50,7 +50,7 @@ func NewConsumer(url string, uc usecase.NotificationUsecase) (*Consumer, error) 
 		return nil, fmt.Errorf("open channel: %w", err)
 	}
 
-	if err = ch.Qos(1, 0, false); err != nil {
+	if err = ch.Qos(10, 0, false); err != nil {
 		return nil, fmt.Errorf("set QoS: %w", err)
 	}
 
@@ -108,18 +108,21 @@ func (c *Consumer) Start(ctx context.Context) error {
 			if !ok {
 				return nil
 			}
-			c.handleDelivery(msg)
+			go c.handleDelivery(msg)
 		}
 	}
 }
 
 func (c *Consumer) handleDelivery(msg amqp.Delivery) {
+	log.Printf("[Consumer] Spawning goroutine for parallel processing, time=%d", time.Now().UnixNano())
 	var event domain.PaymentEvent
 	if err := json.Unmarshal(msg.Body, &event); err != nil {
 		log.Printf("[Consumer] Failed to unmarshal message: %v", err)
 		_ = msg.Nack(false, false)
 		return
 	}
+
+	log.Printf("[Consumer] Processing event %s in goroutine", event.EventID)
 
 	if err := c.uc.HandlePaymentEvent(event); err != nil {
 		log.Printf("[Consumer] Processing failed for event %s: %v", event.EventID, err)
